@@ -435,7 +435,8 @@ Coming soon!
 
 #### Reasoner with vLLM
 
-Use vLLM for Reasoner production inference behind an OpenAI-compatible chat-completions API.
+<details>
+<summary>Use vLLM for Reasoner production inference behind an OpenAI-compatible chat-completions API.</summary>
 
 ```shell
 uv venv --python 3.13 --seed --managed-python
@@ -472,6 +473,7 @@ Configuration notes:
 | `--mm-encoder-tp-mode data` | Data parallelism for the visual encoder in multimodal workloads |
 | `--media-io-kwargs '{"video": {"num_frames": -1}}'` | Allows the processor to consider all available frames before downstream frame sampling |
 | `--allowed-local-media-path` | Required when requests pass local `file://` media paths |
+</details>
 
 ### Troubleshooting
 
