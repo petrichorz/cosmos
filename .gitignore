@@ -177,7 +177,9 @@ secrets.yaml
 **/env.sh
 
 # Cookbook runtime checkouts and generated artifacts
-packages/
+# cosmos3 is vendored into the repo as plain files; ignore other packages.
+packages/*
+!packages/cosmos3/
 cookbooks/cosmos3/generator/audiovisual/outputs/
 outputs/
 
