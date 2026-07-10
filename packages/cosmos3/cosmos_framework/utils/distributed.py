@@ -12,13 +12,12 @@ from contextlib import contextmanager
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Callable, Container, Optional
 
-import pynvml
 import torch
 import torch.distributed as dist
 from torch.distributed import get_process_group_ranks
 
 from cosmos_framework.utils.flags import INTERNAL
-from cosmos_framework.utils.device import Device
+from cosmos_framework.utils.device_backend import IS_CUDA, DIST_BACKEND
 
 if dist.is_available():
     from torch.distributed.distributed_c10d import _get_default_group
@@ -35,31 +34,24 @@ def init() -> int | None:
     if dist.is_initialized():
         return torch.cuda.current_device()
 
-    # Set GPU affinity.
-    pynvml.nvmlInit()
     local_rank = int(os.getenv("LOCAL_RANK", 0))
-    try:
-        device = Device(local_rank)
-        os.sched_setaffinity(0, device.get_cpu_affinity())
-    except pynvml.NVMLError as e:
-        log.warning(f"Failed to set device affinity: {e}")
-    # Set up NCCL communication.
+    # Set up collective communication backend.
     os.environ["TORCH_NCCL_BLOCKING_WAIT"] = "0"
     os.environ["TORCH_NCCL_ASYNC_ERROR_HANDLING"] = "1"
     if dist.is_available():
+        # transfer_to_npu (train.py) redirects torch.cuda -> torch.npu on Ascend.
         torch.cuda.set_device(local_rank)
         # Get the timeout value from environment variable
         timeout_seconds = os.getenv("TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC", 1800)
         # Convert the timeout to an integer (if it isn't already) and then to a timedelta
         timeout_timedelta = timedelta(seconds=int(timeout_seconds))
-        dist.init_process_group(backend="nccl", init_method="env://", timeout=timeout_timedelta)
+        dist.init_process_group(backend=DIST_BACKEND, init_method="env://", timeout=timeout_timedelta)
         log.critical(
             f"Initialized distributed training with local rank {local_rank} with timeout {timeout_seconds}",
             rank0_only=False,
         )
-    # Increase the L2 fetch granularity for faster speed.
-    # For oss, we need to search for the library in site-packages.
-    if INTERNAL:
+    # Increase the L2 fetch granularity for faster speed (CUDA only).
+    if INTERNAL and IS_CUDA:
         _libcudart = ctypes.CDLL("libcudart.so")
         # Set device limit on the current device.
         p_value = ctypes.cast((ctypes.c_int * 1)(), ctypes.POINTER(ctypes.c_int))
