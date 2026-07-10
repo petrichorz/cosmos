@@ -46,10 +46,6 @@ def init() -> int | None:
         # Convert the timeout to an integer (if it isn't already) and then to a timedelta
         timeout_timedelta = timedelta(seconds=int(timeout_seconds))
         dist.init_process_group(backend=DIST_BACKEND, init_method="env://", timeout=timeout_timedelta)
-        log.critical(
-            f"Initialized distributed training with local rank {local_rank} with timeout {timeout_seconds}",
-            rank0_only=False,
-        )
     # Increase the L2 fetch granularity for faster speed (CUDA only).
     if INTERNAL and IS_CUDA:
         _libcudart = ctypes.CDLL("libcudart.so")
