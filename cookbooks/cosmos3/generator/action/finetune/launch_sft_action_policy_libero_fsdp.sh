@@ -15,7 +15,7 @@
 
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
-
+export ASCEND_RT_VISIBLE_DEVICES="2,3"
 TOML_FILE="toml/sft_config/action_policy_libero_fsdp.toml"
 : "${LIBERO_ROOT:=$PWD/data/LIBERO_LeRobot_v3/libero_10}"
 : "${BASE_CHECKPOINT_PATH:=$PWD/checkpoints/Cosmos3-Nano}"
@@ -66,18 +66,31 @@ if [[ -n "${EXTRA_TAIL_OVERRIDES:-}" ]]; then
     TAIL_OVERRIDES=(${EXTRA_TAIL_OVERRIDES})
 fi
 
-TORCHRUN_ARGS=(--nproc_per_node="${NPROC_PER_NODE:-8}")
+export NNODES=1
+export NODE_RANK=0
+export MASTER_ADDR=127.0.0.1
+TORCHRUN_ARGS=(--nproc_per_node="${NPROC_PER_NODE:-2}")
 TORCHRUN_ARGS+=(--master_port="${MASTER_PORT:-50012}")
 [[ -n "${NNODES:-}" ]] && TORCHRUN_ARGS+=(--nnodes="$NNODES")
 [[ -n "${NODE_RANK:-}" ]] && TORCHRUN_ARGS+=(--node_rank="$NODE_RANK")
 [[ -n "${MASTER_ADDR:-}" ]] && TORCHRUN_ARGS+=(--master_addr="$MASTER_ADDR")
 
+# Attach the VSCode debugger (debugpy server on 0.0.0.0:3002; RANK 0 blocks until
+# the client attaches). Set ATTACH_VSCODE_DEBUGGER=1 (or true/yes/y) to enable.
+ATTACH_VSCODE_DEBUGGER="${ATTACH_VSCODE_DEBUGGER:-0}"
+TRAIN_ARGS=()
+if [[ "${ATTACH_VSCODE_DEBUGGER,,}" =~ ^(1|true|yes|y)$ ]]; then
+    TRAIN_ARGS+=(--attach_vscode_debugger)
+fi
+
 OUTPUT_ROOT="${OUTPUT_ROOT:-$PWD/outputs/train}"
 if (( ${#TAIL_OVERRIDES[@]} )); then
     IMAGINAIRE_OUTPUT_ROOT="${IMAGINAIRE_OUTPUT_ROOT:-$OUTPUT_ROOT}" torchrun "${TORCHRUN_ARGS[@]}" \
         -m cosmos_framework.scripts.train --sft-toml="$TOML_FILE" \
+        "${TRAIN_ARGS[@]}" \
         -- "${TAIL_OVERRIDES[@]}"
 else
     IMAGINAIRE_OUTPUT_ROOT="${IMAGINAIRE_OUTPUT_ROOT:-$OUTPUT_ROOT}" torchrun "${TORCHRUN_ARGS[@]}" \
-        -m cosmos_framework.scripts.train --sft-toml="$TOML_FILE"
+        -m cosmos_framework.scripts.train --sft-toml="$TOML_FILE" \
+        "${TRAIN_ARGS[@]}"
 fi
