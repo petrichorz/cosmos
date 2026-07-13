@@ -42,7 +42,7 @@ max_samples_per_batch = 64      # 单卡每 micro-batch 64 个样本
 [optimizer]
 lr = 5.0e-05
 optimizer_type = "AdamW"   # 原生 AdamW;FusedAdam 依赖 transformer_engine(CUDA-only),Ascend NPU 不可用
-fused = false              # torch.optim.AdamW 的 fused=True 是 CUDA-only;NPU 走 foreach(默认,设备无关)
+fused = true              # torch.optim.AdamW 的 fused=True 是 CUDA-only;NPU 走 foreach(默认,设备无关)
 
 [scheduler]
 cycle_lengths = [16000]
