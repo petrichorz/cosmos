@@ -175,6 +175,7 @@ secrets.yaml
 
 # Recipe env files (contain API keys and machine-specific paths)
 **/env.sh
+**/launch_sft_vision_edge_local.sh
 
 # Cookbook runtime checkouts and generated artifacts
 packages/

@@ -8,14 +8,15 @@
 # Run from this folder with the cosmos-framework venv active (see README):
 #   bash launch_sft_vision_edge.sh
 # It downloads the data, prepares the base checkpoint, and trains — in order.
-# Paths are fixed under this folder; edit them below to relocate.
+# Paths default under this folder and can be overridden by exported environment variables.
 
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-DATASET_DIR="$PWD/data/BridgeData2-Subset-Synthetic-Captions"
-CHECKPOINT_DIR="$PWD/checkpoints/Cosmos3-Edge"
-VAE_PATH="$PWD/checkpoints/wan22_vae/Wan2.2_VAE.pth"
+: "${DATASET_DIR:=$PWD/data/BridgeData2-Subset-Synthetic-Captions}"
+: "${CHECKPOINT_DIR:=$PWD/checkpoints/Cosmos3-Edge}"
+: "${COSMOS3_EDGE_PROCESSOR_PATH:=$PWD/checkpoints/Cosmos3-Edge}"
+: "${VAE_PATH:=$PWD/checkpoints/wan22_vae/Wan2.2_VAE.pth}"
 
 # 1. Download the SFT dataset (skipped if present; license-gated — accept terms + 'uvx hf@latest auth login').
 if [[ ! -f "$DATASET_DIR/sft_dataset_bridge/train/video_dataset_file.jsonl" ]]; then
@@ -41,8 +42,18 @@ export WAN_VAE_PATH="$VAE_PATH"
 # The model configs reference their packaged JSONs relative to the framework
 # root, so run torchrun from there (recipe paths stay pinned to this folder).
 TOML_PATH="$PWD/toml/sft_config/vision_sft_edge.toml"
-OUTPUT_ROOT="$PWD/outputs/train"
+: "${OUTPUT_ROOT:=$PWD/outputs/train}"
+
+TORCHRUN_ARGS=(--nproc_per_node="${NPROC_PER_NODE:-8}")
+TORCHRUN_ARGS+=(--master_port="${MASTER_PORT:-50012}")
+[[ -n "${NNODES:-}" ]] && TORCHRUN_ARGS+=(--nnodes="$NNODES")
+[[ -n "${NODE_RANK:-}" ]] && TORCHRUN_ARGS+=(--node_rank="$NODE_RANK")
+[[ -n "${MASTER_ADDR:-}" ]] && TORCHRUN_ARGS+=(--master_addr="$MASTER_ADDR")
+
 cd "$(python -c 'import pathlib, cosmos_framework; print(pathlib.Path(cosmos_framework.__file__).resolve().parents[1])')"
-# Edge is only 2B — on a 4-GPU node (e.g. GB200x4), set --nproc_per_node=4 instead.
-IMAGINAIRE_OUTPUT_ROOT="$OUTPUT_ROOT" torchrun --nproc_per_node=8 \
-    -m cosmos_framework.scripts.train --sft-toml="$TOML_PATH"
+# Edge is only 2B — on a 4-GPU node (e.g. GB200x4), set NPROC_PER_NODE=4 instead.
+IMAGINAIRE_OUTPUT_ROOT="$OUTPUT_ROOT" torchrun "${TORCHRUN_ARGS[@]}" \
+    -m cosmos_framework.scripts.train --sft-toml="$TOML_PATH" -- \
+    model.config.vlm_config.tokenizer.repository=null \
+    model.config.vlm_config.tokenizer.revision=null \
+    +model.config.vlm_config.tokenizer.tokenizer_type="$COSMOS3_EDGE_PROCESSOR_PATH"
