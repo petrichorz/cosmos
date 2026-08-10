@@ -23,6 +23,8 @@ teacher_forcing_history_blocks_min       = 1
 teacher_forcing_history_blocks_max       = 32
 # The original U+V sequence is capped at 45,056; Scheme B expands it to U+2V.
 teacher_forcing_max_sequence_length      = 90112
+# Debug only: rank 0 writes one teacher_forcing_sdpa_bool_mask.png under OUTPUT_ROOT.
+teacher_forcing_visualize_sdpa_mask      = false
 
 [model.ema]
 enabled         = true
