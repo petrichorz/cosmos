@@ -3,6 +3,9 @@
 
 # Scheme-B causal counterpart of vision_sft_edge.toml. Training, data, optimizer,
 # scheduler, parallelism, and checkpoint settings stay aligned with the Edge recipe.
+# Each packed sample independently samples its block/history geometry; sigma is
+# shared by latent frames in the same causal block and sampled independently
+# across blocks.
 
 [job]
 task         = "vfm"
@@ -14,9 +17,10 @@ wandb_mode   = "disabled"
 
 [model]
 max_num_tokens_after_packing             = 45056
-joint_attn_implementation                = "two_way"
+joint_attn_implementation                = "teacher_forcing"
 precision                                = "bfloat16"
 causal_training_strategy                 = "teacher_forcing"
+# Inclusive ranges used for per-sample causal geometry sampling.
 teacher_forcing_block_size_min           = 1
 teacher_forcing_block_size_max           = 4
 teacher_forcing_history_blocks_min       = 1
@@ -25,7 +29,7 @@ teacher_forcing_history_blocks_max       = 32
 teacher_forcing_max_sequence_length      = 90112
 teacher_forcing_dense_mode               = "per_sample"
 # Debug only: rank 0 writes one teacher_forcing_sdpa_bool_mask.png under OUTPUT_ROOT.
-teacher_forcing_visualize_sdpa_mask      = false
+teacher_forcing_visualize_sdpa_mask      = true # false
 
 [model.ema]
 enabled         = true
@@ -91,5 +95,6 @@ load_path            = "${oc.env:BASE_CHECKPOINT_PATH}"
 save_iter            = 100
 
 [dataloader_train]
+# max_samples_per_batch = 8
 max_sequence_length = 45056
 max_caption_tokens   = 2048
