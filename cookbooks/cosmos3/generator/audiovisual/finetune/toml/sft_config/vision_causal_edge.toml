@@ -13,7 +13,7 @@ experiment   = "vision_sft_edge"
 project      = "cosmos3"
 group        = "causal_sft"
 name         = "vision_causal_edge"
-wandb_mode   = "disabled"
+wandb_mode   = "offline"
 
 [model]
 max_num_tokens_after_packing             = 45056
@@ -29,7 +29,7 @@ teacher_forcing_history_blocks_max       = 32
 teacher_forcing_max_sequence_length      = 90112
 teacher_forcing_dense_mode               = "per_sample"
 # Debug only: rank 0 writes one teacher_forcing_sdpa_bool_mask.png under OUTPUT_ROOT.
-teacher_forcing_visualize_sdpa_mask      = true # false
+teacher_forcing_visualize_sdpa_mask      = false # true
 
 [model.ema]
 enabled         = true

@@ -45,10 +45,11 @@ TORCHRUN_ARGS+=(--master_port="${MASTER_PORT:-50012}")
 
 cd "$(python -c 'import pathlib, cosmos_framework; print(pathlib.Path(cosmos_framework.__file__).resolve().parents[1])')"
 IMAGINAIRE_OUTPUT_ROOT="$OUTPUT_ROOT" torchrun "${TORCHRUN_ARGS[@]}" \
-    -m cosmos_framework.scripts.train --attach_vscode_debugger --sft-toml="$TOML_PATH" -- \
+    -m cosmos_framework.scripts.train --sft-toml="$TOML_PATH" -- \
     model=mot_causal_fsdp \
     model.config.vlm_config.tokenizer.repository=null \
     model.config.vlm_config.tokenizer.revision=null \
     +model.config.vlm_config.tokenizer.tokenizer_type="$COSMOS3_EDGE_PROCESSOR_PATH" \
     '~dataloader_train.dataloader.datasets.video.dataset.conditioning_config={0:0.7,1:0.2,2:0.1}' \
     '+dataloader_train.dataloader.datasets.video.dataset.conditioning_config={0:1.0}'
+#     dataloader_train.max_sequence_length=null

@@ -40,7 +40,7 @@ export DATASET_PATH="$DATASET_DIR/sft_dataset_bridge"
 export BASE_CHECKPOINT_PATH="$CHECKPOINT_DIR"
 export WAN_VAE_PATH="$VAE_PATH"
 # The model configs reference their packaged JSONs relative to the framework
-# root, so run torchrun from there (recipe paths stay pinned to this folder).
+# root, so run distributed training from there (recipe paths stay pinned to this folder).
 TOML_PATH="$PWD/toml/sft_config/vision_sft_edge.toml"
 : "${OUTPUT_ROOT:=$PWD/outputs/train}"
 
