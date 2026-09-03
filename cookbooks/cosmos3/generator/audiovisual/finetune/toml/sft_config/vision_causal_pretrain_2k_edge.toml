@@ -12,7 +12,7 @@
 
 [job]
 task         = "vfm"
-experiment   = "vision_sft_edge"
+experiment   = "vision_sft_edge_lerobot3"
 project      = "cosmos3"
 group        = "causal_pretrain"
 name         = "vision_causal_pretrain_2k_edge"
@@ -25,7 +25,7 @@ causal_training_strategy            = "teacher_forcing"
 teacher_forcing_block_size_min      = 1
 teacher_forcing_block_size_max      = 4
 teacher_forcing_history_blocks_min  = 1
-teacher_forcing_history_blocks_max  = 32
+teacher_forcing_history_blocks_max  = 64
 teacher_forcing_dense_mode          = "per_sample"
 teacher_forcing_visualize_sdpa_mask = false
 
@@ -78,9 +78,9 @@ warm_up_steps      = [50]
 
 [trainer]
 distributed_parallelism = "fsdp"
-grad_accum_iter         = 2
+grad_accum_iter         = 1
 logging_iter            = 1
-max_iter                = 2000
+max_iter                = 2
 
 [trainer.callbacks.compile_tokenizer]
 compile_after_iterations = 3
@@ -93,8 +93,8 @@ force_finite = true
 [checkpoint]
 keys_to_skip_loading = ["net_ema."]
 load_path            = "${oc.env:BASE_CHECKPOINT_PATH}"
-save_iter            = 100
+save_iter            = 2
 
 [dataloader_train]
-max_sequence_length = 74000 # 45056
+max_sequence_length = 45056
 max_caption_tokens   = 2048
