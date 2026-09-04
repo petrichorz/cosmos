@@ -98,3 +98,5 @@ save_iter            = 2
 [dataloader_train]
 max_sequence_length = 45056
 max_caption_tokens   = 2048
+min_video_frames     = 61
+max_video_duration_s = 61.0
