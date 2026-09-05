@@ -45,4 +45,6 @@ IMAGINAIRE_OUTPUT_ROOT="$OUTPUT_ROOT" torchrun "${TORCHRUN_ARGS[@]}" \
     model=mot_causal_fsdp \
     model.config.vlm_config.tokenizer.repository=null \
     model.config.vlm_config.tokenizer.revision=null \
-    +model.config.vlm_config.tokenizer.tokenizer_type="$COSMOS3_EDGE_PROCESSOR_PATH"
+    +model.config.vlm_config.tokenizer.tokenizer_type="$COSMOS3_EDGE_PROCESSOR_PATH" \
+    '~dataloader_train.dataloader.datasets.video.dataset.conditioning_config={0:0.7,1:0.2,2:0.1}' \
+    '+dataloader_train.dataloader.datasets.video.dataset.conditioning_config={0:1.0}'

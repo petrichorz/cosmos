@@ -80,7 +80,14 @@ warm_up_steps      = [50]
 distributed_parallelism = "fsdp"
 grad_accum_iter         = 1
 logging_iter            = 1
-max_iter                = 2
+max_iter                = 1000000 # safety cap; benchmarking.num_epochs normally stops the run
+
+[trainer.benchmarking]
+enabled               = true
+num_epochs            = 1
+warmup_iterations     = 2
+output_subdir         = "benchmark"
+save_final_checkpoint = false
 
 [trainer.callbacks.compile_tokenizer]
 compile_after_iterations = 3
@@ -93,7 +100,7 @@ force_finite = true
 [checkpoint]
 keys_to_skip_loading = ["net_ema."]
 load_path            = "${oc.env:BASE_CHECKPOINT_PATH}"
-save_iter            = 2
+save_iter            = 1000001
 
 [dataloader_train]
 max_sequence_length = 45056
@@ -102,6 +109,6 @@ max_caption_tokens = 2048
 min_video_frames    = 61          # episode 最少帧数
 max_video_duration_s = 61.0       # episode 最长秒数；设为 0 可关闭上限
 max_video_fps        = 15.0       # 超过后按整数帧间隔下采样；设为 0 可关闭
-video_backend     = "pyav" # 可切换为 "pyav"
+video_backend     = "pyav" # 可切换为 "torchcodec"
 video_resize_mode = "decode_transform" # 可切换为 "decode_transform"
 video_tolerance_s = 0.033       # PyAV 最近帧匹配容差；TorchCodec 后端不使用
